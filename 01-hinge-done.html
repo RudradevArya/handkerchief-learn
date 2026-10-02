@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment 1 · finished — a real hinge</title>
+  <style>
+    :root {
+      --cell: 120px;
+      --paper: #efe8dc;
+      --ink: #2a2724;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.55 Georgia, serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    nav {
+      padding: 12px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(120, 100, 70, 0.2);
+    }
+    nav a { color: #35507e; margin-right: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(280px, 420px);
+      min-height: calc(100vh - 44px);
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .stage {
+      perspective: 900px;
+      perspective-origin: 50% 40%;
+      min-height: 420px;
+      position: relative;
+    }
+    .scene {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(54deg) rotateZ(-12deg);
+    }
+    .cloth {
+      transform-style: preserve-3d;
+      transform: translateX(-60px);
+    }
+    .panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--cell);
+      height: var(--cell);
+      transform-style: preserve-3d;
+      transform-origin: 0 0;
+      /* Smooth the slider so θ looks like a fold, not a jump.
+         CSS name: `transition`. We only transition `transform`. */
+      transition: transform 0.05s linear;
+    }
+    .face {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font: 18px Georgia, serif;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .inner {
+      background: linear-gradient(160deg, #fffcf6, #f1eadc);
+      border: 3px double #35507e;
+    }
+    .outer {
+      background: linear-gradient(160deg, #e4ebf2, #cbd6e2);
+      border: 3px double #35507e;
+      transform: rotateY(180deg);
+    }
+    .crease {
+      position: absolute;
+      left: 120px;
+      top: -8px;
+      width: 2px;
+      height: 136px;
+      background: #35507e;
+      transform: translateX(-1px);
+      pointer-events: none;
+    }
+    aside {
+      padding: 22px 22px 40px;
+      border-left: 1px solid rgba(120, 100, 70, 0.2);
+      background: rgba(255, 252, 246, 0.45);
+    }
+    h1 { font-weight: 400; font-size: 26px; margin: 0 0 8px; }
+    .ok {
+      background: #e7efe6;
+      border: 1px solid #a3c09f;
+      padding: 10px 12px;
+      margin: 12px 0 18px;
+    }
+    label { display: block; margin: 12px 0 6px; }
+    input[type="range"] { width: 100%; }
+    code {
+      font: 13px/1.4 ui-monospace, Consolas, monospace;
+      background: rgba(120, 100, 70, 0.1);
+      padding: 0.1em 0.35em;
+    }
+    pre {
+      font: 12px/1.45 ui-monospace, Consolas, monospace;
+      background: rgba(255, 252, 246, 0.9);
+      border: 1px solid rgba(120, 100, 70, 0.18);
+      padding: 10px 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    a { color: #35507e; }
+    .eq { font-style: italic; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Lab index</a>
+    <a href="01-hinge-wip.html">1 · WIP</a>
+    <a href="01-hinge-done.html">1 · done</a>
+    <a href="02-compose-wip.html">2 · WIP</a>
+    <a href="02-compose-done.html">2 · done</a>
+  </nav>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="scene">
+        <div class="cloth">
+          <div class="crease" title="crease x = a"></div>
+          <div class="panel" id="panelA">
+            <div class="face inner">A inner</div>
+            <div class="face outer">A outer</div>
+          </div>
+          <div class="panel" id="panelB">
+            <div class="face inner">B inner</div>
+            <div class="face outer">B outer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <h1>Finished: one crease</h1>
+      <div class="ok">
+        Tile A now uses a <strong>hinge</strong>: move the crease to the
+        origin, rotate, move it back. At 180°, A sits on B. Inner meets inner.
+      </div>
+      <p class="eq">H<sub>a</sub>(θ) = T(a) · R<sub>y</sub>(θ) · T(−a)</p>
+      <p>
+        In CSS that is
+        <code>translateX(a) rotateY(θ) translateX(−a)</code>.
+        Lists run <strong>right to left</strong>, so T(−a) happens first.
+      </p>
+      <label for="angle">Fold angle θ (degrees)</label>
+      <input id="angle" type="range" min="0" max="180" value="0">
+      <p id="angleReadout">θ = 0°</p>
+      <p>CSS on A (the moving tile):</p>
+      <pre id="cssOut"></pre>
+      <p>
+        At θ = 180° this is a <strong>reflection</strong> in the crease
+        plus a <strong>side swap</strong>. Doing it twice is the identity —
+        that is called an <strong>involution</strong>.
+      </p>
+      <p>
+        Compare:
+        <a href="01-hinge-wip.html">the WIP (rotateY only)</a>.
+      </p>
+      <p>
+        Read:
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/translateX">translateX()</a>,
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotateY">rotateY()</a>,
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transforms/Using_CSS_transforms">Using CSS transforms</a>,
+        <a href="https://en.wikipedia.org/wiki/Involution_(mathematics)">involution</a>,
+        <a href="https://en.wikipedia.org/wiki/Reflection_(mathematics)">reflection</a>.
+      </p>
+    </aside>
+  </div>
+
+<script>
+"use strict";
+
+// CELL is the side length of one tile, in pixels. Call it s in the notes.
+var CELL = 120;
+
+// CREASE_X is `a` in H_a(θ). It is the shared edge between A and B,
+// measured in the cloth's own coordinates, from the top-left of A.
+var CREASE_X = CELL;
+
+var panelA = document.getElementById("panelA");
+var panelB = document.getElementById("panelB");
+var angleInput = document.getElementById("angle");
+var angleReadout = document.getElementById("angleReadout");
+var cssOut = document.getElementById("cssOut");
+
+// HINGE about a vertical line x = creaseX.
+//
+// What this is called:
+//   - in the handkerchief notes: H_a(θ)
+//   - in geometry: a rotation conjugated by a translation
+//     (conjugation = "do T, do R, undo T")
+//   - in everyday words: change the origin, rotate, change it back
+//
+// Why the three pieces:
+//   1. translateX(-creaseX)  moves the crease to x = 0 (the rotateY axis)
+//   2. rotateY(angle)        folds about that axis
+//   3. translateX(creaseX)   puts the crease back where it lives in the cloth
+//
+// Why the order in the string is "backwards":
+//   CSS applies a transform LIST from RIGHT TO LEFT.
+//   We write:  translateX(a) rotateY(θ) translateX(-a)
+//   The browser does translateX(-a) first. That is what we want.
+//
+// Read: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transforms/Using_CSS_transforms
+function hingeAroundVerticalCrease(creaseX, angleDeg) {
+  var a = creaseX;
+  var theta = angleDeg;
+  return (
+    "translateX(" + a + "px) " +
+    "rotateY(" + theta + "deg) " +
+    "translateX(" + (-a) + "px)"
+  );
+}
+
+function applyHinge() {
+  var theta = Number(angleInput.value);
+
+  // GRID PLACEMENT. A lives in column 0, row 0.
+  var placeA = "translate(0px, 0px)";
+  // B lives in column 1, row 0.
+  var placeB = "translate(" + CELL + "px, 0px)";
+
+  // A is on the moving side of the crease (x < a), so it gets the hinge.
+  // A tiny translateZ puts the moving tile above B so they do not flicker
+  // when they occupy the same square. That lift is the baby version of
+  // the stack height z in assignment 2.
+  var lift = "translateZ(2px) ";
+  var aTransform = lift + hingeAroundVerticalCrease(CREASE_X, theta) + " " + placeA;
+  panelA.style.transform = aTransform;
+  panelB.style.transform = placeB;
+
+  angleReadout.textContent = "θ = " + theta + "°";
+  cssOut.textContent = aTransform;
+}
+
+angleInput.addEventListener("input", applyHinge);
+applyHinge();
+</script>
+</body>
+</html>

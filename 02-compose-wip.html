@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment 2 · work in progress — nested wrappers</title>
+  <style>
+    :root {
+      --cell: 100px;
+      --paper: #efe8dc;
+      --ink: #2a2724;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.55 Georgia, serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    nav {
+      padding: 12px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(120, 100, 70, 0.2);
+    }
+    nav a { color: #35507e; margin-right: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(280px, 440px);
+      min-height: calc(100vh - 44px);
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .stage {
+      perspective: 900px;
+      perspective-origin: 50% 40%;
+      min-height: 460px;
+      position: relative;
+    }
+    .scene {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(54deg) rotateZ(-12deg);
+    }
+    .cloth {
+      transform-style: preserve-3d;
+      transform: translate(-100px, -100px);
+    }
+    /* A WRAPPER is a parent DOM node that tries to be "the moving half".
+       That idea is called a nested scene graph, or origami DOM.
+       It works for ONE fold. It cannot work for TWO, because one tile
+       would need two parents. */
+    .wrapper {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-style: preserve-3d;
+      transform-origin: 0 0;
+    }
+    .panel {
+      position: absolute;
+      width: var(--cell);
+      height: var(--cell);
+      transform-style: preserve-3d;
+      transform-origin: 0 0;
+    }
+    .face {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font: 16px Georgia, serif;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .inner {
+      background: linear-gradient(160deg, #fffcf6, #f1eadc);
+      border: 3px double #35507e;
+    }
+    .outer {
+      background: linear-gradient(160deg, #e4ebf2, #cbd6e2);
+      border: 3px double #35507e;
+      transform: rotateY(180deg);
+    }
+    aside {
+      padding: 22px 22px 40px;
+      border-left: 1px solid rgba(120, 100, 70, 0.2);
+      background: rgba(255, 252, 246, 0.45);
+    }
+    h1 { font-weight: 400; font-size: 26px; margin: 0 0 8px; }
+    .note {
+      background: #f8e8e4;
+      border: 1px solid #d9b0a8;
+      padding: 10px 12px;
+      margin: 12px 0 18px;
+    }
+    label { display: block; margin: 12px 0 6px; }
+    input[type="range"] { width: 100%; }
+    code {
+      font: 13px/1.4 ui-monospace, Consolas, monospace;
+      background: rgba(120, 100, 70, 0.1);
+      padding: 0.1em 0.35em;
+    }
+    pre {
+      font: 12px/1.45 ui-monospace, Consolas, monospace;
+      background: rgba(255, 252, 246, 0.9);
+      border: 1px solid rgba(120, 100, 70, 0.18);
+      padding: 10px 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    a { color: #35507e; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Lab index</a>
+    <a href="01-hinge-wip.html">1 · WIP</a>
+    <a href="01-hinge-done.html">1 · done</a>
+    <a href="02-compose-wip.html">2 · WIP</a>
+    <a href="02-compose-done.html">2 · done</a>
+  </nav>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="scene">
+        <div class="cloth">
+          <!--
+            NESTED ATTEMPT
+            Fold 1 should move the LEFT COLUMN (A and C) over the right.
+            So we wrap A and C in #fold1.
+
+            Fold 2 should move the TOP ROW (A and B) over the bottom.
+            We try to wrap "the top" as #fold2 containing #fold1 and B.
+
+            C is inside #fold1, so C is glued to A.
+            When fold 2 runs, C flies with A even though C is a BOTTOM tile
+            and should stay with D. That is the two-parents problem:
+            C must join fold 1, A must join fold 1 AND fold 2.
+            A DOM node has one parent.
+          -->
+          <div class="wrapper" id="fold2">
+            <div class="wrapper" id="fold1">
+              <div class="panel" id="panelA" style="left:0; top:0;">
+                <div class="face inner">A inner</div>
+                <div class="face outer">A outer</div>
+              </div>
+              <div class="panel" id="panelC" style="left:0; top:100px;">
+                <div class="face inner">C inner</div>
+                <div class="face outer">C outer</div>
+              </div>
+            </div>
+            <div class="panel" id="panelB" style="left:100px; top:0;">
+              <div class="face inner">B inner</div>
+              <div class="face outer">B outer</div>
+            </div>
+          </div>
+          <div class="panel" id="panelD" style="left:100px; top:100px;">
+            <div class="face inner">D inner</div>
+            <div class="face outer">D outer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <h1>Work in progress: nested folds</h1>
+      <div class="note">
+        First take fold 1 to 180°. The left column lands on the right —
+        that part looks fine. Then take fold 2 to 180°. C is stuck to A
+        inside <code>#fold1</code>, so the second crease cannot split them.
+      </div>
+      <p>
+        This is why the real handkerchief uses <strong>sibling panels</strong>
+        and writes both hinges into each tile's own <code>transform</code>,
+        instead of a tree of wrappers.
+      </p>
+      <label for="f1">Fold 1 · left over right (degrees)</label>
+      <input id="f1" type="range" min="0" max="180" value="0">
+      <p id="f1Readout">fold 1 = 0°</p>
+      <label for="f2">Fold 2 · top over bottom (degrees)</label>
+      <input id="f2" type="range" min="0" max="180" value="0">
+      <p id="f2Readout">fold 2 = 0°</p>
+      <pre id="cssOut"></pre>
+      <p>
+        Finished version:
+        <a href="02-compose-done.html">siblings + composed hinges</a>.
+      </p>
+      <p>
+        Read:
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-style">transform-style</a>
+        (why every wrapper still needs <code>preserve-3d</code>),
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transforms/Using_CSS_transforms">transform lists</a>.
+      </p>
+    </aside>
+  </div>
+
+<script>
+"use strict";
+
+var CELL = 100;
+var fold1 = document.getElementById("fold1");
+var fold2 = document.getElementById("fold2");
+var f1Input = document.getElementById("f1");
+var f2Input = document.getElementById("f2");
+var f1Readout = document.getElementById("f1Readout");
+var f2Readout = document.getElementById("f2Readout");
+var cssOut = document.getElementById("cssOut");
+
+function applyNested() {
+  var t1 = Number(f1Input.value);
+  var t2 = Number(f2Input.value);
+
+  // Fold 1 wrapper is the left column, one cell wide and two tall.
+  // transform-origin 100% 50% is the RIGHT EDGE, the intended vertical crease.
+  // We still wrap it as T(a) R T(-a) using pixel translates, about x = CELL.
+  fold1.style.transform =
+    "translateX(" + CELL + "px) rotateY(" + t1 + "deg) translateX(" + (-CELL) + "px)";
+
+  // Fold 2 wrapper includes A, C, and B. We try to hinge about y = CELL
+  // (the line between the top row and the bottom row).
+  // rotateX is the horizontal-crease version of rotateY.
+  // The minus sign makes the flap come toward the camera, same as the real file.
+  fold2.style.transform =
+    "translateY(" + CELL + "px) rotateX(" + (-t2) + "deg) translateY(" + (-CELL) + "px)";
+
+  f1Readout.textContent = "fold 1 = " + t1 + "°";
+  f2Readout.textContent = "fold 2 = " + t2 + "°";
+  cssOut.textContent =
+    "#fold1 { transform: " + fold1.style.transform + "; }\n" +
+    "#fold2 { transform: " + fold2.style.transform + "; }\n\n" +
+    "C is a child of #fold1, so fold 2 cannot leave C behind.";
+}
+
+f1Input.addEventListener("input", applyNested);
+f2Input.addEventListener("input", applyNested);
+applyNested();
+</script>
+</body>
+</html>

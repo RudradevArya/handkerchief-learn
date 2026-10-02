@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hinge lab — start here</title>
+  <style>
+    body {
+      margin: 0;
+      font: 16px/1.6 Georgia, "Iowan Old Style", serif;
+      color: #2a2724;
+      background: #efe8dc;
+      padding: 40px 28px 80px;
+    }
+    main { max-width: 720px; margin: 0 auto; }
+    h1 { font-weight: 400; font-size: 32px; letter-spacing: -0.02em; }
+    h2 { font-weight: 400; font-size: 22px; margin-top: 2em; }
+    p, li { color: #4d463e; }
+    a { color: #35507e; }
+    .files a {
+      display: block;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(120, 100, 70, 0.2);
+      text-decoration: none;
+    }
+    .files a:hover { text-decoration: underline; }
+    .files b { color: #2a2724; }
+    .muted { color: #7a7166; font-size: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="muted">Hinge lab · not the full handkerchief</p>
+  <h1>Learn the fold, not the whole piece</h1>
+  <p>
+    The handkerchief visualisation stands on one idea: a fold is a
+    <em>hinge</em> — a 180° rotation about a crease that already sits in the
+    cloth. These pages are small demos of that idea. They are not a rebuild
+    of the 4×4 story.
+  </p>
+  <p>
+    Read the study list, then open the work-in-progress file so you can see
+    the usual mistake. Then open the finished file. The JavaScript is written
+    slowly on purpose, with names and comments for the words mathematicians
+    and CSS use.
+  </p>
+
+  <h2>The files</h2>
+  <div class="files">
+    <a href="01-hinge-wip.html">
+      <b>Assignment 1 · work in progress</b><br>
+      <span class="muted">Two tiles. rotateY only. The flap hinges on the wrong line.</span>
+    </a>
+    <a href="01-hinge-done.html">
+      <b>Assignment 1 · finished</b><br>
+      <span class="muted">The same two tiles, with a real hinge: T(a) R(θ) T(−a).</span>
+    </a>
+    <a href="02-compose-wip.html">
+      <b>Assignment 2 · work in progress</b><br>
+      <span class="muted">Nested wrappers. A tile cannot have two parents, so the second fold is wrong.</span>
+    </a>
+    <a href="02-compose-done.html">
+      <b>Assignment 2 · finished</b><br>
+      <span class="muted">Four sibling tiles, two hinges in one transform list, a paper stack table.</span>
+    </a>
+  </div>
+
+  <h2>Reading (in this order)</h2>
+  <ol>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Reflection_(mathematics)">Wikipedia · Reflection (mathematics)</a>
+      — the map <em>x ↦ 2a − x</em>. That is what a 180° hinge looks like from above.
+    </li>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Involution_(mathematics)">Wikipedia · Involution</a>
+      — a function that is its own inverse. Fold twice and you are back. That is why we can store a fold as 0 or 1.
+    </li>
+    <li>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transforms/Using_CSS_transforms">MDN · Using CSS transforms</a>
+      — the camera (<code>perspective</code>), 3D children (<code>transform-style: preserve-3d</code>), and that a transform list is applied <strong>right to left</strong>.
+    </li>
+    <li>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function">MDN · transform-function</a>
+      — the catalogue of <code>translateX</code>, <code>rotateY</code>, and friends.
+    </li>
+    <li>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotateY">MDN · rotateY()</a>
+      and
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/translateX">translateX()</a>
+      — the two functions inside a vertical hinge.
+    </li>
+    <li>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/perspective">MDN · perspective</a>,
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-style">transform-style</a>,
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/backface-visibility">backface-visibility</a>
+      — the three properties that make a two-sided card in CSS, without WebGL.
+    </li>
+    <li>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transforms/Using_CSS_transforms#3d_specific_css_properties">MDN · 3D-specific CSS properties</a>
+      — same article, the 3D section. Optional once the pages above make sense.
+    </li>
+  </ol>
+  <p class="muted">
+    You do not need WebGL, Three.js, or a physics engine. The cloth never bends.
+  </p>
+</main>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment 1 · work in progress — wrong hinge</title>
+  <style>
+    /*
+      This file is the usual first attempt.
+      It is supposed to look wrong at 180°.
+    */
+    :root {
+      --cell: 120px;
+      --paper: #efe8dc;
+      --ink: #2a2724;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.55 Georgia, serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    nav {
+      padding: 12px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(120, 100, 70, 0.2);
+    }
+    nav a { color: #35507e; margin-right: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(280px, 420px);
+      min-height: calc(100vh - 44px);
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .stage {
+      /* CAMERA. In CSS this property is called `perspective`.
+         It places a vanishing point in front of the page, in pixels. */
+      perspective: 900px;
+      perspective-origin: 50% 40%;
+      min-height: 420px;
+      position: relative;
+    }
+    .scene {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      /* Keep children in real 3D. The CSS name is `transform-style`.
+         The value `preserve-3d` means "do not flatten my children into a poster". */
+      transform-style: preserve-3d;
+      transform: rotateX(54deg) rotateZ(-12deg);
+    }
+    .cloth {
+      transform-style: preserve-3d;
+      /* Shift left by one cell so the pair is centred on the scene origin. */
+      transform: translateX(-60px);
+    }
+    .panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--cell);
+      height: var(--cell);
+      transform-style: preserve-3d;
+      /* Top-left is the origin of every rotateY unless we wrap it.
+         That origin is what makes this WIP wrong. */
+      transform-origin: 0 0;
+    }
+    .face {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font: 18px Georgia, serif;
+      /* If a face points away from the camera, do not paint it.
+         CSS name: `backface-visibility`. */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .inner {
+      background: linear-gradient(160deg, #fffcf6, #f1eadc);
+      border: 3px double #35507e;
+    }
+    .outer {
+      background: linear-gradient(160deg, #e4ebf2, #cbd6e2);
+      border: 3px double #35507e;
+      /* The outer print sits on the back of the card.
+         This rotateY(180deg) is a FACE, not a FOLD. */
+      transform: rotateY(180deg);
+    }
+    .crease {
+      position: absolute;
+      left: 120px;
+      top: -8px;
+      width: 2px;
+      height: 136px;
+      background: #c45c5c;
+      transform: translateX(-1px);
+      pointer-events: none;
+    }
+    aside {
+      padding: 22px 22px 40px;
+      border-left: 1px solid rgba(120, 100, 70, 0.2);
+      background: rgba(255, 252, 246, 0.45);
+    }
+    h1 { font-weight: 400; font-size: 26px; margin: 0 0 8px; }
+    .note {
+      background: #f8e8e4;
+      border: 1px solid #d9b0a8;
+      padding: 10px 12px;
+      margin: 12px 0 18px;
+    }
+    label { display: block; margin: 12px 0 6px; }
+    input[type="range"] { width: 100%; }
+    code {
+      font: 13px/1.4 ui-monospace, Consolas, monospace;
+      background: rgba(120, 100, 70, 0.1);
+      padding: 0.1em 0.35em;
+    }
+    pre {
+      font: 12px/1.45 ui-monospace, Consolas, monospace;
+      background: rgba(255, 252, 246, 0.9);
+      border: 1px solid rgba(120, 100, 70, 0.18);
+      padding: 10px 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    a { color: #35507e; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Lab index</a>
+    <a href="01-hinge-wip.html">1 · WIP</a>
+    <a href="01-hinge-done.html">1 · done</a>
+    <a href="02-compose-wip.html">2 · WIP</a>
+    <a href="02-compose-done.html">2 · done</a>
+  </nav>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="scene">
+        <div class="cloth" id="cloth">
+          <!-- The red line is the CREASE we *wanted*: the shared edge, x = 120px. -->
+          <div class="crease" title="intended crease"></div>
+          <div class="panel" id="panelA">
+            <div class="face inner">A inner</div>
+            <div class="face outer">A outer</div>
+          </div>
+          <div class="panel" id="panelB">
+            <div class="face inner">B inner</div>
+            <div class="face outer">B outer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <h1>Work in progress: the wrong axis</h1>
+      <div class="note">
+        This page is a learning snapshot, not a broken accident.
+        Tile A uses <code>rotateY</code> alone. That rotation is about the
+        <em>element origin</em> (top-left of A), not about the crease.
+      </div>
+      <p>
+        Drag the slider to 180°. A swings around its left edge and flies
+        into empty space. B never receives it. That is the first mistake
+        almost everyone makes.
+      </p>
+      <label for="angle">Fold angle θ (degrees)</label>
+      <input id="angle" type="range" min="0" max="180" value="0">
+      <p id="angleReadout">θ = 0°</p>
+      <p>CSS on A right now:</p>
+      <pre id="cssOut"></pre>
+      <p>
+        The missing idea is called a <strong>change of origin</strong>
+        (also: <em>conjugating</em> the rotation). You translate the crease
+        to the origin, rotate, then translate back. See the finished file.
+      </p>
+      <p>
+        Read:
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotateY">rotateY()</a>,
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transforms/Using_CSS_transforms">Using CSS transforms</a>
+        (right-to-left lists),
+        <a href="https://en.wikipedia.org/wiki/Reflection_(mathematics)">reflection in a line</a>.
+      </p>
+    </aside>
+  </div>
+
+<script>
+"use strict";
+
+// --- Names we will keep using -------------------------------------------
+// TILE / PANEL: one rigid square of cloth.
+// FACE: one printed side of that square (inner ivory, outer blue).
+// CREASE: the line we want to fold about. Here it should be x = 120px.
+// ELEMENT ORIGIN: where CSS thinks (0,0) is for transforms. For .panel
+//   that is the top-left corner, because we set transform-origin: 0 0.
+// rotateY(θ): a rotation about a vertical axis THROUGH THAT ORIGIN.
+//   MDN: https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotateY
+
+var CELL = 120;
+var panelA = document.getElementById("panelA");
+var panelB = document.getElementById("panelB");
+var angleInput = document.getElementById("angle");
+var angleReadout = document.getElementById("angleReadout");
+var cssOut = document.getElementById("cssOut");
+
+function applyWrongHinge() {
+  var theta = Number(angleInput.value);
+
+  // B does not move. It only sits at column 1.
+  // `translate` here is a GRID PLACEMENT, not a fold.
+  panelB.style.transform = "translate(" + CELL + "px, 0px)";
+
+  // A is supposed to fold onto B about the shared edge.
+  // THIS LINE IS THE WIP MISTAKE.
+  //
+  // rotateY(theta) runs about A's top-left vertical axis.
+  // A 180° turn therefore puts A to the LEFT of where it started,
+  // instead of onto B on the right.
+  //
+  // The finished file wraps this rotation:
+  //   translateX(CELL) rotateY(theta) translateX(-CELL)
+  // which is called a hinge, or H_a(θ) = T(a) · R(θ) · T(−a).
+  var aTransform = "rotateY(" + theta + "deg) translate(0px, 0px)";
+  panelA.style.transform = aTransform;
+
+  angleReadout.textContent = "θ = " + theta + "°";
+  cssOut.textContent = aTransform;
+}
+
+angleInput.addEventListener("input", applyWrongHinge);
+applyWrongHinge();
+</script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment 2 · finished — composed hinges</title>
+  <style>
+    :root {
+      --cell: 100px;
+      --paper: #efe8dc;
+      --ink: #2a2724;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.55 Georgia, serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    nav {
+      padding: 12px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(120, 100, 70, 0.2);
+    }
+    nav a { color: #35507e; margin-right: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(300px, 460px);
+      min-height: calc(100vh - 44px);
+    }
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .stage {
+      perspective: 900px;
+      perspective-origin: 50% 40%;
+      min-height: 480px;
+      position: relative;
+    }
+    .scene {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(54deg) rotateZ(-12deg);
+    }
+    .cloth {
+      transform-style: preserve-3d;
+      /* Recentre a 2×2 of 100px cells. Not the main lesson; it just keeps
+         the packet on the camera. The handkerchief file does the same
+         with #shifter after four folds. */
+      transform: translate(-100px, -100px);
+    }
+    .panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--cell);
+      height: var(--cell);
+      transform-style: preserve-3d;
+      transform-origin: 0 0;
+    }
+    .face {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font: 16px Georgia, serif;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .inner {
+      background: linear-gradient(160deg, #fffcf6, #f1eadc);
+      border: 3px double #35507e;
+    }
+    .outer {
+      background: linear-gradient(160deg, #e4ebf2, #cbd6e2);
+      border: 3px double #35507e;
+      transform: rotateY(180deg);
+    }
+    aside {
+      padding: 22px 22px 40px;
+      border-left: 1px solid rgba(120, 100, 70, 0.2);
+      background: rgba(255, 252, 246, 0.45);
+    }
+    h1 { font-weight: 400; font-size: 26px; margin: 0 0 8px; }
+    .ok {
+      background: #e7efe6;
+      border: 1px solid #a3c09f;
+      padding: 10px 12px;
+      margin: 12px 0 18px;
+    }
+    label { display: block; margin: 12px 0 6px; }
+    input[type="range"] { width: 100%; }
+    code {
+      font: 13px/1.4 ui-monospace, Consolas, monospace;
+      background: rgba(120, 100, 70, 0.1);
+      padding: 0.1em 0.35em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font: 13px ui-monospace, Consolas, monospace;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid rgba(120, 100, 70, 0.25);
+      padding: 4px 6px;
+      text-align: left;
+    }
+    th { font-weight: 600; }
+    pre {
+      font: 11px/1.45 ui-monospace, Consolas, monospace;
+      background: rgba(255, 252, 246, 0.9);
+      border: 1px solid rgba(120, 100, 70, 0.18);
+      padding: 10px 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+      max-height: 140px;
+    }
+    a { color: #35507e; }
+    .eq { font-style: italic; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Lab index</a>
+    <a href="01-hinge-wip.html">1 · WIP</a>
+    <a href="01-hinge-done.html">1 · done</a>
+    <a href="02-compose-wip.html">2 · WIP</a>
+    <a href="02-compose-done.html">2 · done</a>
+  </nav>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="scene">
+        <div class="cloth" id="cloth"></div>
+      </div>
+    </div>
+
+    <aside>
+      <h1>Finished: two hinges, four siblings</h1>
+      <div class="ok">
+        Each tile is a sibling. Both hinges live in that tile's own
+        transform list. A paper simulation (called SIM) stores who swings
+        and the stack height <code>z</code>. CSS only animates the angles.
+      </div>
+      <p class="eq">
+        W = T<sub>z</sub>(z) · H<sub>2</sub> · H<sub>1</sub> · T(grid)
+      </p>
+      <p>
+        Written left to right in CSS, but applied <strong>right to left</strong>,
+        so crease 1 happens first, in the cloth's own frame.
+      </p>
+      <label for="f1">Fold 1 · left over right</label>
+      <input id="f1" type="range" min="0" max="180" value="0">
+      <p id="f1Readout">fold 1 = 0°</p>
+      <label for="f2">Fold 2 · top over bottom</label>
+      <input id="f2" type="range" min="0" max="180" value="0">
+      <p id="f2Readout">fold 2 = 0°</p>
+      <p>Paper state (updated from SIM, not from pixels):</p>
+      <table>
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>x</th>
+            <th>y</th>
+            <th>up</th>
+            <th>z</th>
+            <th>swings</th>
+          </tr>
+        </thead>
+        <tbody id="stateBody"></tbody>
+      </table>
+      <p>CSS on tile A:</p>
+      <pre id="cssOut"></pre>
+      <p>
+        Nested attempt:
+        <a href="02-compose-wip.html">WIP wrappers</a>.
+      </p>
+      <p>
+        Read:
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transforms/Using_CSS_transforms">right-to-left transform lists</a>,
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotateX">rotateX()</a>,
+        <a href="https://en.wikipedia.org/wiki/Involution_(mathematics)">involution</a>.
+      </p>
+    </aside>
+  </div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------------
+// This file is the core of handkerchief 5, shrunk to a 2×2.
+// Same words, fewer tiles. No wipes, no play button, no 4×4.
+// ---------------------------------------------------------------------------
+
+var CELL = 100;
+
+// A tiny lift so two faces that share (x, y) do not flicker.
+// The handkerchief file calls this LAYER_GAP / GAP.
+var LAYER_GAP = 3;
+
+// TILE IDS. Four letters, one per square, reading order.
+var TILE_IDS = ["A", "B", "C", "D"];
+
+// GRID is the UNFOLDED place of each tile.
+// Column 0 is left, row 0 is top.
+// This object is the "data first" model: numbers, then DOM.
+var GRID = {
+  A: { col: 0, row: 0 },
+  B: { col: 1, row: 0 },
+  C: { col: 0, row: 1 },
+  D: { col: 1, row: 1 }
+};
+
+// A CREASE is a fold line in cell units.
+// `axis` is which coordinate we compare ("x" or "y").
+// `at` is the line. Tiles with coordinate < at are on the MOVING side.
+// Fold toward the bottom-right, same rule as the handkerchief.
+var CREASES = [
+  { axis: "x", at: 1 }, // fold 1: left column over right, line x = 1
+  { axis: "y", at: 1 }  // fold 2: top row over bottom, line y = 1
+];
+
+function oppositeSide(side) {
+  if (side === "inner") {
+    return "outer";
+  }
+  return "inner";
+}
+
+// SIM is short for SIMULATION.
+// We fold the cloth ON PAPER (with numbers) at load time.
+// For every tile we record:
+//   swings[id][k]  — 1 if that tile moves at crease k, else 0
+//   snapshots[n]   — where each tile sits after n folds
+//                    (x, y, which side is up, stack height z)
+//
+// CSS never re-does this math while you drag. It only changes angles.
+// That split is called a DISCRETE MODEL vs a CONTINUOUS VIEW.
+function buildSimulation() {
+  var cell = {};
+  var swings = {};
+  var snapshots = [];
+  var i;
+  var id;
+  var creaseIndex;
+  var crease;
+  var tile;
+  var stackDepth;
+
+  for (i = 0; i < TILE_IDS.length; i++) {
+    id = TILE_IDS[i];
+    cell[id] = {
+      x: GRID[id].col,
+      y: GRID[id].row,
+      up: "inner",
+      z: 0
+    };
+    swings[id] = [0, 0];
+  }
+
+  function takeSnapshot() {
+    var copy = {};
+    var j;
+    var name;
+    for (j = 0; j < TILE_IDS.length; j++) {
+      name = TILE_IDS[j];
+      copy[name] = {
+        x: cell[name].x,
+        y: cell[name].y,
+        up: cell[name].up,
+        z: cell[name].z
+      };
+    }
+    snapshots.push(copy);
+  }
+
+  takeSnapshot(); // n = 0, fully open
+  stackDepth = 1;
+
+  for (creaseIndex = 0; creaseIndex < CREASES.length; creaseIndex++) {
+    crease = CREASES[creaseIndex];
+    for (i = 0; i < TILE_IDS.length; i++) {
+      id = TILE_IDS[i];
+      tile = cell[id];
+
+      // Still side: do nothing.
+      if (tile[crease.axis] >= crease.at) {
+        continue;
+      }
+
+      // This tile is on the moving side of crease k.
+      swings[id][creaseIndex] = 1;
+
+      // REFLECTION in the crease, in cell units.
+      // For a crease at `at`, the last cell index on the moving side is at-1,
+      // so the mirror is:  2*at - 1 - current.
+      // Example: at = 1, x = 0  →  x becomes 1.
+      tile[crease.axis] = 2 * crease.at - 1 - tile[crease.axis];
+
+      // SIDE SWAP. A 180° hinge turns the tile over.
+      tile.up = oppositeSide(tile.up);
+
+      // STACK REVERSAL. The moving half is laid on top of the still half.
+      // If the still pile is `stackDepth` layers, new z is
+      //   z′ = 2L − 1 − z
+      // so the old bottom of the moving pile becomes the new top.
+      tile.z = 2 * stackDepth - 1 - tile.z;
+    }
+    stackDepth = stackDepth * 2;
+    takeSnapshot();
+  }
+
+  return {
+    snapshots: snapshots,
+    swings: swings
+  };
+}
+
+var SIM = buildSimulation();
+
+// --- DOM: four sibling panels, not a tree of folds -----------------------
+var cloth = document.getElementById("cloth");
+var panels = {};
+var i;
+var id;
+var panel;
+var innerFace;
+var outerFace;
+
+for (i = 0; i < TILE_IDS.length; i++) {
+  id = TILE_IDS[i];
+  panel = document.createElement("div");
+  panel.className = "panel";
+  panel.id = "panel" + id;
+
+  innerFace = document.createElement("div");
+  innerFace.className = "face inner";
+  innerFace.textContent = id + " inner";
+
+  outerFace = document.createElement("div");
+  outerFace.className = "face outer";
+  outerFace.textContent = id + " outer";
+
+  panel.appendChild(innerFace);
+  panel.appendChild(outerFace);
+  cloth.appendChild(panel);
+  panels[id] = panel;
+}
+
+// Vertical crease: rotateY. Horizontal crease: rotateX with a minus
+// so the flap comes toward the camera (same convention as handkerchief 5).
+function hingeCss(crease, angleDeg) {
+  var a = crease.at * CELL;
+  if (crease.axis === "x") {
+    return (
+      "translateX(" + a + "px) rotateY(" + angleDeg + "deg) translateX(" + (-a) + "px)"
+    );
+  }
+  return (
+    "translateY(" + a + "px) rotateX(" + (-angleDeg) + "deg) translateY(" + (-a) + "px)"
+  );
+}
+
+function foldCountFromAngles(angle1, angle2) {
+  // The paper snapshot is discrete and folds close IN ORDER.
+  // Slider past 90° counts as "that fold is shut" for the table.
+  // Fold 2 does not count unless fold 1 is already shut.
+  var n = 0;
+  if (angle1 >= 90) {
+    n = 1;
+    if (angle2 >= 90) {
+      n = 2;
+    }
+  }
+  return n;
+}
+
+function applyFolds() {
+  var angle1 = Number(document.getElementById("f1").value);
+  var angle2 = Number(document.getElementById("f2").value);
+  var n = foldCountFromAngles(angle1, angle2);
+  var snapshot = SIM.snapshots[n];
+  var t;
+  var swing;
+  var stacked;
+  var place;
+  var k;
+  var angle;
+  var rowHtml;
+
+  document.getElementById("f1Readout").textContent = "fold 1 = " + angle1 + "°";
+  document.getElementById("f2Readout").textContent = "fold 2 = " + angle2 + "°";
+
+  rowHtml = "";
+
+  for (i = 0; i < TILE_IDS.length; i++) {
+    id = TILE_IDS[i];
+    stacked = snapshot[id];
+    swing = SIM.swings[id];
+    place =
+      "translate(" + (GRID[id].col * CELL) + "px, " + (GRID[id].row * CELL) + "px)";
+
+    // COMPOSITION. We build the string left to right as:
+    //   lift · H2 · H1 · place
+    // CSS runs it right to left, so `place` happens first, then H1, then H2.
+    // That is the same formula as the handkerchief:
+    //   W = T_z · H2 · H1 · T(grid)
+    t = "translateZ(" + (stacked.z * LAYER_GAP) + "px)";
+
+    // k runs 1 then 0 so we *write* H2 before H1 in the string.
+    for (k = CREASES.length - 1; k >= 0; k--) {
+      if (k === 0) {
+        angle = angle1 * swing[0];
+      } else {
+        angle = angle2 * swing[1];
+      }
+      t = t + " " + hingeCss(CREASES[k], angle);
+    }
+    t = t + " " + place;
+    panels[id].style.transform = t;
+
+    if (id === "A") {
+      document.getElementById("cssOut").textContent = t;
+    }
+
+    rowHtml =
+      rowHtml +
+      "<tr><td>" + id + "</td><td>" + stacked.x + "</td><td>" + stacked.y +
+      "</td><td>" + stacked.up + "</td><td>" + stacked.z +
+      "</td><td>" + swing[0] + "," + swing[1] + "</td></tr>";
+  }
+
+  document.getElementById("stateBody").innerHTML = rowHtml;
+}
+
+document.getElementById("f1").addEventListener("input", applyFolds);
+document.getElementById("f2").addEventListener("input", applyFolds);
+applyFolds();
+</script>
+</body>
+</html>
